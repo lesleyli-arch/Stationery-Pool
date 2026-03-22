@@ -17,11 +17,8 @@
         .bg-p0 { background: #d4edda; color: #155724; }  
         .bg-p1 { background: #d1ecf1; color: #0c5460; }  
         .special-tag { position: absolute; top: 10px; right: 10px; background: linear-gradient(90deg, #ff7a18, #e52e71); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; }  
-        
-        /* 修改点：图片容器增加点击手势 */
         .img-container { width: 100%; height: 220px; background: #fff; overflow: hidden; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }  
         .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }  
-        
         .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }  
         .title { font-weight: bold; font-size: 15px; margin-bottom: 10px; height: 38px; line-height: 19px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }  
         .price-variant-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }  
@@ -32,10 +29,7 @@
         .invite-id-box { flex-grow: 1; border: 2px dashed #ee4d2d; padding: 4px; text-align: center; font-size: 16px; font-weight: bold; color: #ee4d2d; border-radius: 6px; cursor: pointer; }  
         .footer-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; margin-top: auto; }  
         .btn-link { color: #0056b3; font-weight: bold; text-decoration: none; }  
-        
-        /* 修改点：优化图片放大模态框，适应网页比例 */  
         #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; cursor: zoom-out; }  
-        #imageModal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 4px; background: white; }
     </style>  
 </head>  
 <body>  
@@ -49,138 +43,17 @@
     </header>  
     <div class="filter-section">  
         <input type="text" id="searchInput" placeholder="搜索标题/ID..." oninput="debouncedFilter()">  
-        <select id="l1Filter" onchange="applyFilters()"><option value="">二级类目(全部)</option></select>  
+        <select id="l1Filter" onchange="updateL2(); applyFilters()"><option value="">二级类目(全部)</option></select>  
+        <select id="l2Filter" onchange="applyFilters()"><option value="">三级类目(全部)</option></select>  
         <select id="pFilter" onchange="applyFilters()"><option value="">P0/P1(全部)</option><option value="P0">P0</option><option value="P1">P1</option></select>  
+          
+        <!-- 【新增筛选点 1】：是否有1688核价链接下拉框 -->  
         <select id="linkFilter" onchange="applyFilters()">  
             <option value="">是否有1688核价链接(全部)</option>  
             <option value="Y">是 (Y)</option>  
             <option value="N">否 (N)</option>  
         </select>  
-    </div>  
-
-    <div class="product-grid" id="productGrid"></div>  
-</div>  
-
-<div id="imageModal" onclick="this.style.display='none'">
-    <img id="modalImg" src="" alt="预览图">
-</div>
-
-<script>  
-    let allData = [];
-
-    // 图片放大函数
-    function zoomImage(url) {
-        const modal = document.getElementById('imageModal');
-        const img = document.getElementById('modalImg');
-        img.src = url;
-        modal.style.display = 'flex';
-    }
-
-    async function init() {
-        try {
-            const response = await fetch('data.csv');
-            const text = await response.text();
-            const lines = text.split('\n').filter(l => l.trim());
-            
-            // 根据你提供的最新排序解析
-            allData = lines.slice(1).map(line => {
-                const v = line.split(',').map(s => s.trim());
-                return {
-                    title: v[0],
-                    variant: v[1],
-                    price: v[2],
-                    imgUrl: v[3],
-                    link: v[4],
-                    l1: v[5],
-                    l2: v[6],
-                    inviteId: v[7],
-                    modelId: v[8],
-                    finalLink1688: v[9],
-                    priceJudge: v[10], // P0 or P1
-                    updateDate: v[11],
-                    itemId: v[12],
-                    maxPrice: v[13],
-                    tag: v[14],
-                    modelCount: v[15],
-                    ado: parseFloat(v[16]) || 0 // 最后一列 ADO
-                };
-            });
-
-            // 【修改点 1】：默认按 ADO 从高到低排序
-            allData.sort((a, b) => b.ado - a.ado);
-
-            render(allData);
-        } catch (e) {
-            console.error("加载数据失败", e);
-        }
-    }
-
-    function render(data) {
-        const grid = document.getElementById('productGrid');
-        grid.innerHTML = data.map(item => `
-            <div class="card">
-                <div class="judge-tag ${item.priceJudge === 'P0' ? 'bg-p0' : 'bg-p1'}" 
-                     onclick="if('${item.finalLink1688}') window.open('${item.finalLink1688}')">
-                    ${item.priceJudge}${item.finalLink1688 ? '🔗' : ''}
-                </div>
-                
-                ${item.tag ? `<div class="special-tag">${item.tag}</div>` : ''}
-                
-                <div class="img-container" onclick="zoomImage('${item.imgUrl}')">
-                    <img src="${item.imgUrl}" alt="product">
-                </div>
-                
-                <div class="info">
-                    <div class="title">${item.title}</div>
-                    <div class="price-variant-row">
-                        <span class="price">￥${item.price}</span>
-                        <span class="variant">${item.variant || ''}</span>
-                    </div>
-                    
-                    <div class="invite-row">
-                        <span class="model-count-tag">${item.modelCount}型号</span>
-                        <div class="invite-id-box" onclick="copyId('${item.inviteId}')">${item.inviteId}</div>
-                    </div>
-                    
-                    <div class="footer-row">
-                        <span>单量: <b>${item.ado}</b></span>
-                        <span>${item.l1} | ${item.l2}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function copyId(id) {
-        navigator.clipboard.writeText(id).then(() => {
-            alert('复制成功: ' + id);
-        });
-    }
-
-    function applyFilters() {
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        const p = document.getElementById('pFilter').value;
-        const link = document.getElementById('linkFilter').value;
-
-        const filtered = allData.filter(d => {
-            const matchSearch = d.title.toLowerCase().includes(search) || d.inviteId.includes(search);
-            const matchP = !p || d.priceJudge === p;
-            const matchLink = !link || (link === 'Y' ? d.finalLink1688 : !d.finalLink1688);
-            return matchSearch && matchP && matchLink;
-        });
-
-        // 筛选后保持排序
-        filtered.sort((a, b) => b.ado - a.ado);
-        render(filtered);
-    }
-
-    let timer;
-    function debouncedFilter() {
-        clearTimeout(timer);
-        timer = setTimeout(applyFilters, 300);
-    }
-
-    window.onload = init;
-</script>
-</body>
-</html>
+  
+        <select id="tagFilter" onchange="applyFilters()"><option value="">特殊标签(全部)</option></select>  
+        <input type="number" id="minPrice" placeholder="最低价" oninput="debouncedFilter()">  
+        <input type="number" id="maxPri
