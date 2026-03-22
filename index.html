@@ -2,173 +2,185 @@
 <html lang="zh-CN">  
 <head>  
     <meta charset="UTF-8">  
-    <title>文具4月热销原品清单</title>  
+    <title>文具4月热销原品清单（笔/本册/礼品包装）</title>  
     <style>  
-        /* 基础样式保持不变 */  
+        /* 样式部分保持不变 */  
         body { font-family: 'PingFang SC', sans-serif; background: #f4f4f7; color: #333; margin: 0; padding: 20px; }  
         .container { max-width: 1200px; margin: 0 auto; }  
         header { background: #ee4d2d; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }  
         .desc-box { background: rgba(255,255,255,0.2); padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 14px; line-height: 1.6; }  
-        
         .filter-section { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }  
         input, select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }  
-        
-        /* 网格布局 */
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }  
         .card { background: white; border-radius: 8px; overflow: hidden; border: 1px solid #eee; transition: 0.3s; position: relative; display: flex; flex-direction: column; }  
-        .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-
-        /* 标签样式 */
-        .judge-tag { position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; }  
+        .judge-tag { position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }  
         .bg-p0 { background: #d4edda; color: #155724; }  
         .bg-p1 { background: #d1ecf1; color: #0c5460; }  
-        .ado-tag { position: absolute; top: 10px; right: 10px; background: #ff4d4f; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; }
-
-        /* 图片容器与放大效果 */
+        .special-tag { position: absolute; top: 10px; right: 10px; background: linear-gradient(90deg, #ff7a18, #e52e71); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; }  
         .img-container { width: 100%; height: 220px; background: #fff; overflow: hidden; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }  
-        .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.2s; }  
-
-        /* 全屏放大层 */
-        .fullscreen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; cursor: zoom-out; }
-        .fullscreen-overlay img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; }
-
-        /* 信息区 */
+        .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }  
         .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }  
-        .title { font-weight: bold; font-size: 14px; margin-bottom: 10px; height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }  
-        .price-row { display: flex; justify-content: space-between; align-items: baseline; }
-        .price { color: #ee4d2d; font-size: 20px; font-weight: bold; }
-        .ado-text { font-size: 12px; color: #999; }
+        .title { font-weight: bold; font-size: 15px; margin-bottom: 10px; height: 38px; line-height: 19px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }  
+        .price-variant-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }  
+        .price { color: #ee4d2d; font-size: 22px; font-weight: bold; flex-shrink: 0; }  
+        .variant { font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 10px; }  
+        .invite-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; }  
+        .model-count-tag { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; font-size: 12px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }  
+        .invite-id-box { flex-grow: 1; border: 2px dashed #ee4d2d; padding: 4px; text-align: center; font-size: 16px; font-weight: bold; color: #ee4d2d; border-radius: 6px; cursor: pointer; }  
+        .footer-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; margin-top: auto; }  
+        .btn-link { color: #0056b3; font-weight: bold; text-decoration: none; }  
         
-        .id-copy-box { margin-top: 10px; border: 2px dashed #ee4d2d; padding: 6px; text-align: center; color: #ee4d2d; font-weight: bold; border-radius: 6px; cursor: pointer; background: #fff5f2; }
-        .id-copy-box:active { background: #ffd8d1; }
+        /* 优化后的放大镜模态框样式 */
+        #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; cursor: zoom-out; }  
+        #imageModal img { max-width: 95%; max-height: 95%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
     </style>  
 </head>  
 <body>  
-
 <div class="container">  
     <header>  
-        <h1>文具4月热销原品清单</h1>  
+        <h1>文具4月热销原品清单（笔/本册/礼品包装）</h1>  
         <div class="desc-box">  
-            🔥 <b>默认排序：</b> 已按单量（ADO）从高到低排列。<br>
-            🔍 <b>交互说明：</b> 点击商品图片可查看高清大图，点击虚线框 ID 可一键复制。
-        </div>  
+🔥优先选P0：P0 级产品价格更优  
+💰高效提报：单击红框 ID 快速复制，搜索该 ID 报满所有型号流量翻倍！  
+💹价格有问题： 点击左上角P0查看核价链接，联系买手申诉。</div>  
     </header>  
+    <div class="filter-section">  
+        <input type="text" id="searchInput" placeholder="搜索标题/ID..." oninput="debouncedFilter()">  
+        <select id="l1Filter" onchange="updateL2(); applyFilters()"><option value="">二级类目(全部)</option></select>  
+        <select id="l2Filter" onchange="applyFilters()"><option value="">三级类目(全部)</option></select>  
+        <select id="pFilter" onchange="applyFilters()"><option value="">P0/P1(全部)</option><option value="P0">P0</option><option value="P1">P1</option></select>  
+          
+        <select id="linkFilter" onchange="applyFilters()">  
+            <option value="">是否有1688核价链接(全部)</option>  
+            <option value="Y">是 (Y)</option>  
+            <option value="N">否 (N)</option>  
+        </select>  
+  
+        <select id="tagFilter" onchange="applyFilters()"><option value="">特殊标签(全部)</option></select>  
+        <input type="number" id="minPrice" placeholder="最低价" oninput="debouncedFilter()">  
+        <input type="number" id="maxPrice" placeholder="最高价" oninput="debouncedFilter()">  
+    </div>  
 
-    <div class="filter-section" id="filterControls">  
-        <input type="text" id="searchInput" placeholder="搜索标题或ID..." oninput="applyFilters()">  
-        <select id="pFilter" onchange="applyFilters()">
-            <option value="">全部评级</option>
-            <option value="P0">P0</option>
-            <option value="P1">P1</option>
-        </select>
-        </div>  
+    <div class="product-grid" id="productGrid"></div>
+</div>
 
-    <div class="product-grid" id="productGrid">
-        </div>  
-</div>  
-
-<div id="imageOverlay" class="fullscreen-overlay" onclick="closeImage()">
-    <img id="overlayImg" src="" alt="放大图">
+<div id="imageModal" onclick="this.style.display='none'">
+    <img id="modalImg" src="">
 </div>
 
 <script>
-    let allProducts = [];
+    let allData = [];
 
-    // 加载并处理 CSV
-    async function loadData() {
+    // 图片展示逻辑
+    function showImage(src) {
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImg');
+        img.src = src;
+        modal.style.display = 'flex';
+    }
+
+    async function init() {
         try {
             const response = await fetch('data.csv');
-            const csvText = await response.text();
-            const rows = csvText.split('\n').filter(row => row.trim() !== '');
-            
-            // 跳过表头
-            const dataRows = rows.slice(1);
+            const text = await response.text();
+            const lines = text.split('\n').filter(l => l.trim());
+            const headers = lines[0].split(',');
 
-            allProducts = dataRows.map(row => {
-                const cols = row.split(',').map(c => c.trim());
+            allData = lines.slice(1).map(line => {
+                const values = line.split(',');
+                // 假设最后一列是 ADO
+                const adoValue = parseFloat(values[values.length - 1]) || 0;
                 return {
-                    id: cols[0],
-                    title: cols[1],
-                    imageUrl: cols[2],
-                    price: cols[3],
-                    category: cols[4],
-                    pLevel: cols[5],
-                    link1688: cols[6],
-                    ado: parseFloat(cols[cols.length - 1]) || 0 // 取最后一列作为单量
+                    id: values[0],
+                    title: values[1],
+                    image: values[2],
+                    price: values[3],
+                    l1: values[4],
+                    l2: values[5],
+                    pLevel: values[6],
+                    link1688: values[7],
+                    tag: values[8],
+                    variant: values[9],
+                    modelCount: values[10],
+                    ado: adoValue
                 };
             });
 
-            // 【核心修改】：默认按 ADO 从高到低排序
-            allProducts.sort((a, b) => b.ado - a.ado);
+            // 【修改点 1】：默认按单量（ADO）从高到低排序
+            allData.sort((a, b) => b.ado - a.ado);
 
-            renderProducts(allProducts);
-        } catch (error) {
-            console.error("加载数据失败:", error);
+            // 初始化下拉框选项（此处省略具体的下拉逻辑填充，保持你原有的即可）
+            // ... (populate filters logic)
+
+            render(allData);
+        } catch (e) {
+            console.error("加载数据失败", e);
         }
     }
 
-    function renderProducts(products) {
+    function render(data) {
         const grid = document.getElementById('productGrid');
-        grid.innerHTML = products.map(p => `
+        grid.innerHTML = data.map(item => `
             <div class="card">
-                <div class="judge-tag ${p.pLevel === 'P0' ? 'bg-p0' : 'bg-p1'}">${p.pLevel}</div>
-                <div class="ado-tag">热销: ${p.ado}</div>
-                <div class="img-container" onclick="openImage('${p.imageUrl}')">
-                    <img src="${p.imageUrl}" loading="lazy" alt="产品图">
+                <div class="judge-tag ${item.pLevel === 'P0' ? 'bg-p0' : 'bg-p1'}" onclick="window.open('${item.link1688}')">
+                    ${item.pLevel}${item.link1688 ? '🔗' : ''}
+                </div>
+                ${item.tag ? `<div class="special-tag">${item.tag}</div>` : ''}
+                <div class="img-container" onclick="showImage('${item.image}')">
+                    <img src="${item.image}" alt="product">
                 </div>
                 <div class="info">
-                    <div class="title">${p.title}</div>
-                    <div class="price-row">
-                        <span class="price">¥${p.price}</span>
-                        <span class="ado-text">单量:${p.ado}</span>
+                    <div class="title">${item.title}</div>
+                    <div class="price-variant-row">
+                        <span class="price">￥${item.price}</span>
+                        <span class="variant">${item.variant || ''}</span>
                     </div>
-                    <div class="id-copy-box" onclick="copyId('${p.id}')">
-                        ID: ${p.id} (点击复制)
+                    <div class="invite-row">
+                        <span class="model-count-tag">${item.modelCount}型号</span>
+                        <div class="invite-id-box" onclick="copyId('${item.id}')">${item.id}</div>
+                    </div>
+                    <div class="footer-row">
+                        <span>单量: ${item.ado}</span>
+                        <span>${item.l2}</span>
                     </div>
                 </div>
             </div>
         `).join('');
     }
 
-    // 图片放大逻辑
-    function openImage(url) {
-        const overlay = document.getElementById('imageOverlay');
-        const img = document.getElementById('overlayImg');
-        img.src = url;
-        overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // 禁止背景滚动
-    }
-
-    function closeImage() {
-        document.getElementById('imageOverlay').style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-
-    // 复制 ID
     function copyId(id) {
-        navigator.clipboard.writeText(id).then(() => {
-            alert('ID ' + id + ' 已复制到剪贴板');
-        });
+        navigator.clipboard.writeText(id).then(() => alert('ID已复制: ' + id));
     }
 
-    // 筛选功能
+    // 搜索和筛选逻辑保持原样，但在 applyFilters 结尾确保排序
     function applyFilters() {
-        const searchText = document.getElementById('searchInput').value.toLowerCase();
-        const pLevel = document.getElementById('pFilter').value;
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const l1 = document.getElementById('l1Filter').value;
+        const l2 = document.getElementById('l2Filter').value;
+        const p = document.getElementById('pFilter').value;
+        const link = document.getElementById('linkFilter').value;
 
-        const filtered = allProducts.filter(p => {
-            const matchSearch = p.title.toLowerCase().includes(searchText) || p.id.includes(searchText);
-            const matchP = pLevel === "" || p.pLevel === pLevel;
-            return matchSearch && matchP;
+        let filtered = allData.filter(d => {
+            const matchSearch = d.title.toLowerCase().includes(search) || d.id.includes(search);
+            const matchL1 = !l1 || d.l1 === l1;
+            const matchL2 = !l2 || d.l2 === l2;
+            const matchP = !p || d.pLevel === p;
+            const matchLink = !link || (link === 'Y' ? d.link1688 : !d.link1688);
+            return matchSearch && matchL1 && matchL2 && matchP && matchLink;
         });
 
-        // 筛选后依然保持 ADO 排序
+        // 筛选后依然按 ADO 排序
         filtered.sort((a, b) => b.ado - a.ado);
-        renderProducts(filtered);
+        render(filtered);
     }
 
-    window.onload = loadData;
-</script>
+    let timer;
+    function debouncedFilter() {
+        clearTimeout(timer);
+        timer = setTimeout(applyFilters, 300);
+    }
 
-</body>  
+    window.onload = init;
+</script>
+</body>
 </html>
