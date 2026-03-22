@@ -17,6 +17,7 @@
         .bg-p0 { background: #d4edda; color: #155724; }  
         .bg-p1 { background: #d1ecf1; color: #0c5460; }  
         .special-tag { position: absolute; top: 10px; right: 10px; background: linear-gradient(90deg, #ff7a18, #e52e71); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; }  
+        /* 修改点2：光标改为 zoom-in，增加平滑感 */
         .img-container { width: 100%; height: 220px; background: #fff; overflow: hidden; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }  
         .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }  
         .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }  
@@ -29,7 +30,10 @@
         .invite-id-box { flex-grow: 1; border: 2px dashed #ee4d2d; padding: 4px; text-align: center; font-size: 16px; font-weight: bold; color: #ee4d2d; border-radius: 6px; cursor: pointer; }  
         .footer-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; margin-top: auto; }  
         .btn-link { color: #0056b3; font-weight: bold; text-decoration: none; }  
-        #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; cursor: zoom-out; }  
+        
+        /* 修改点2：美化放大模态框，确保适应网页比例 */
+        #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; cursor: zoom-out; }  
+        #imageModal img { max-width: 95%; max-height: 95%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
     </style>  
 </head>  
 <body>  
@@ -47,7 +51,6 @@
         <select id="l2Filter" onchange="applyFilters()"><option value="">三级类目(全部)</option></select>  
         <select id="pFilter" onchange="applyFilters()"><option value="">P0/P1(全部)</option><option value="P0">P0</option><option value="P1">P1</option></select>  
           
-        <!-- 【新增筛选点 1】：是否有1688参考链接下拉框 -->  
         <select id="linkFilter" onchange="applyFilters()">  
             <option value="">是否有1688参考链接(全部)</option>  
             <option value="Y">是 (Y)</option>  
@@ -58,8 +61,7 @@
         <input type="number" id="minPrice" placeholder="最低价" oninput="debouncedFilter()">  
         <input type="number" id="maxPrice" placeholder="最高价" oninput="debouncedFilter()">  
         <select id="sortOrder" onchange="applyFilters()">  
-            <option value="default">默认排序</option>  
-            <option value="priceAsc">价格升序</option>  
+            <option value="default">默认排序 (按单量)</option>  <option value="priceAsc">价格升序</option>  
             <option value="priceDesc">价格降序</option>  
         </select>  
         <span id="countDisplay" style="font-weight:bold; color:#ee4d2d; margin-left:auto;"></span>  
@@ -95,7 +97,9 @@
                 r.push(cur.trim()); r.push(index);  
                 return r;  
             }).filter(a => a.length >= 12);  
-            initFilters(); applyFilters();  
+            
+            initFilters(); 
+            applyFilters(); // 初始加载即应用排序
         } catch (e) { console.error(e); }  
     }  
   
@@ -120,11 +124,12 @@
             l2: arr[6],  
             inviteId: cleanId(arr[7]),  
             modelId: cleanId(arr[8]),   
-            link1688: arr[9], // 对应 CSV 的 final_1688_link  
+            link1688: arr[9], 
             judge: arr[10],  
             date: arr[11],  
             specialTag: arr[14] || "",  
-            modelCount: arr[15] || "1"  
+            modelCount: arr[15] || "1",
+            adoValue: parseFloat(arr[16]) || 0 // 修改点1：提取第17列ADO数值
         };  
     };  
   
@@ -139,7 +144,7 @@
             card.innerHTML = `  
                 <div class="judge-tag ${item.judge === 'P0' ? 'bg-p0' : 'bg-p1'}" onclick="checkLink('${item.link1688}')">${item.judge}</div>  
                 ${item.specialTag ? `<div class="special-tag">${item.specialTag}</div>` : ''}  
-                <div class="img-container" ondblclick="document.getElementById('modalImg').src='${item.imgUrl}'; document.getElementById('imageModal').style.display='flex';">  
+                <div class="img-container" onclick="document.getElementById('modalImg').src='${item.imgUrl}'; document.getElementById('imageModal').style.display='flex';">  
                     <img src="${item.imgUrl}" loading="lazy">  
                 </div>  
                 <div class="info">  
@@ -185,15 +190,10 @@
         const l1 = document.getElementById('l1Filter').value, l2 = document.getElementById('l2Filter').value;  
         const p = document.getElementById('pFilter').value, tag = document.getElementById('tagFilter').value;  
         const min = parseFloat(document.getElementById('minPrice').value) || 0, max = parseFloat(document.getElementById('maxPrice').value) || Infinity;  
-          
-        // 【新增筛选点 2】：获取核价链接筛选值  
         const hasLinkValue = document.getElementById('linkFilter').value;  
   
         filteredData = products.filter(arr => {  
             const i = mapData(arr);  
-              
-            // 【新增逻辑点 3】：判断核价链接是否符合条件  
-            // 判断标准：不为空 且 包含 http  
             const isActualLink = i.link1688 && i.link1688.toLowerCase().includes('http');  
             let linkMatch = true;  
             if (hasLinkValue === 'Y') {  
@@ -205,12 +205,18 @@
             return (i.title.toLowerCase().includes(q) || i.inviteId.toLowerCase().includes(q)) &&  
                    (!l1 || i.l1 === l1) && (!l2 || i.l2 === l2) && (!p || i.judge === p) &&   
                    (!tag || i.specialTag === tag) && (i.price >= min && i.price <= max) &&  
-                   linkMatch; // 加入核价链接的匹配判断  
+                   linkMatch;  
         });  
           
         const sort = document.getElementById('sortOrder').value;  
-        if (sort === 'priceAsc') filteredData.sort((a,b) => a[2] - b[2]);  
-        else if (sort === 'priceDesc') filteredData.sort((a,b) => b[2] - a[2]);  
+        if (sort === 'priceAsc') {
+            filteredData.sort((a,b) => a[2] - b[2]);  
+        } else if (sort === 'priceDesc') {
+            filteredData.sort((a,b) => b[2] - a[2]);  
+        } else {
+            // 修改点1：默认排序逻辑，按第17列(索引16)降序
+            filteredData.sort((a,b) => (parseFloat(b[16]) || 0) - (parseFloat(a[16]) || 0));
+        }
           
         document.getElementById('countDisplay').innerText = `已筛选：${filteredData.length} 款`;  
         render(filteredData, 1);  
