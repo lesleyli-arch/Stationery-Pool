@@ -4,7 +4,6 @@
     <meta charset="UTF-8">  
     <title>文具4月热销原品清单（笔/本册/礼品包装）</title>  
     <style>  
-        /* 样式部分保持不变 */  
         body { font-family: 'PingFang SC', sans-serif; background: #f4f4f7; color: #333; margin: 0; padding: 20px; }  
         .container { max-width: 1200px; margin: 0 auto; }  
         header { background: #ee4d2d; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }  
@@ -17,9 +16,11 @@
         .bg-p0 { background: #d4edda; color: #155724; }  
         .bg-p1 { background: #d1ecf1; color: #0c5460; }  
         .special-tag { position: absolute; top: 10px; right: 10px; background: linear-gradient(90deg, #ff7a18, #e52e71); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; z-index: 10; }  
-        /* 修改点2：光标改为 zoom-in，增加平滑感 */
+        
+        /* 修改点：图片容器点击手势 */
         .img-container { width: 100%; height: 220px; background: #fff; overflow: hidden; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }  
         .img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }  
+        
         .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }  
         .title { font-weight: bold; font-size: 15px; margin-bottom: 10px; height: 38px; line-height: 19px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }  
         .price-variant-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }  
@@ -31,9 +32,9 @@
         .footer-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; margin-top: auto; }  
         .btn-link { color: #0056b3; font-weight: bold; text-decoration: none; }  
         
-        /* 修改点2：美化放大模态框，确保适应网页比例 */
+        /* 修改点：放大模态框自适应 */
         #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; cursor: zoom-out; }  
-        #imageModal img { max-width: 95%; max-height: 95%; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #imageModal img { max-width: 95%; max-height: 95%; object-fit: contain; }  
     </style>  
 </head>  
 <body>  
@@ -61,7 +62,8 @@
         <input type="number" id="minPrice" placeholder="最低价" oninput="debouncedFilter()">  
         <input type="number" id="maxPrice" placeholder="最高价" oninput="debouncedFilter()">  
         <select id="sortOrder" onchange="applyFilters()">  
-            <option value="default">默认排序 (按单量)</option>  <option value="priceAsc">价格升序</option>  
+            <option value="default">默认排序(按单量)</option>  
+            <option value="priceAsc">价格升序</option>  
             <option value="priceDesc">价格降序</option>  
         </select>  
         <span id="countDisplay" style="font-weight:bold; color:#ee4d2d; margin-left:auto;"></span>  
@@ -69,6 +71,7 @@
     <div class="product-grid" id="productGrid"></div>  
     <div style="margin:20px; text-align:center;" id="pagination"></div>  
 </div>  
+
 <div id="imageModal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>  
   
 <script>  
@@ -97,39 +100,24 @@
                 r.push(cur.trim()); r.push(index);  
                 return r;  
             }).filter(a => a.length >= 12);  
-            
             initFilters(); 
-            applyFilters(); // 初始加载即应用排序
+            applyFilters();  
         } catch (e) { console.error(e); }  
     }  
   
     function checkLink(rawUrl) {  
         if (!rawUrl) { alert('❌ 无核价链接'); return; }  
         const match = rawUrl.match(/https?:\/\/[^\s]+/);  
-        if (match) {  
-            window.open(match[0], '_blank');  
-        } else {  
-            alert('❌ 链接格式无法识别');  
-        }  
+        if (match) { window.open(match[0], '_blank'); } 
+        else { alert('❌ 链接格式无法识别'); }  
     }  
   
     const mapData = (arr) => {  
         return {  
-            title: arr[0],  
-            variant: arr[1],  
-            price: parseFloat(arr[2]) || 0,  
-            imgUrl: arr[3],  
-            link: arr[4],  
-            l1: arr[5],  
-            l2: arr[6],  
-            inviteId: cleanId(arr[7]),  
-            modelId: cleanId(arr[8]),   
-            link1688: arr[9], 
-            judge: arr[10],  
-            date: arr[11],  
-            specialTag: arr[14] || "",  
-            modelCount: arr[15] || "1",
-            adoValue: parseFloat(arr[16]) || 0 // 修改点1：提取第17列ADO数值
+            title: arr[0], variant: arr[1], price: parseFloat(arr[2]) || 0, imgUrl: arr[3],  
+            link: arr[4], l1: arr[5], l2: arr[6], inviteId: cleanId(arr[7]),  
+            modelId: cleanId(arr[8]), link1688: arr[9], judge: arr[10],  
+            date: arr[11], specialTag: arr[14] || "", modelCount: arr[15] || "1"  
         };  
     };  
   
@@ -196,11 +184,8 @@
             const i = mapData(arr);  
             const isActualLink = i.link1688 && i.link1688.toLowerCase().includes('http');  
             let linkMatch = true;  
-            if (hasLinkValue === 'Y') {  
-                linkMatch = isActualLink;  
-            } else if (hasLinkValue === 'N') {  
-                linkMatch = !isActualLink;  
-            }  
+            if (hasLinkValue === 'Y') linkMatch = isActualLink;  
+            else if (hasLinkValue === 'N') linkMatch = !isActualLink;  
   
             return (i.title.toLowerCase().includes(q) || i.inviteId.toLowerCase().includes(q)) &&  
                    (!l1 || i.l1 === l1) && (!l2 || i.l2 === l2) && (!p || i.judge === p) &&   
@@ -209,14 +194,12 @@
         });  
           
         const sort = document.getElementById('sortOrder').value;  
-        if (sort === 'priceAsc') {
-            filteredData.sort((a,b) => a[2] - b[2]);  
-        } else if (sort === 'priceDesc') {
-            filteredData.sort((a,b) => b[2] - a[2]);  
-        } else {
-            // 修改点1：默认排序逻辑，按第17列(索引16)降序
-            filteredData.sort((a,b) => (parseFloat(b[16]) || 0) - (parseFloat(a[16]) || 0));
-        }
+        if (sort === 'priceAsc') filteredData.sort((a,b) => a[2] - b[2]);  
+        else if (sort === 'priceDesc') filteredData.sort((a,b) => b[2] - a[2]);  
+        else {  
+            // 修改点：默认按第17列(索引16)降序排序  
+            filteredData.sort((a,b) => (parseFloat(b[16]) || 0) - (parseFloat(a[16]) || 0));  
+        }  
           
         document.getElementById('countDisplay').innerText = `已筛选：${filteredData.length} 款`;  
         render(filteredData, 1);  
@@ -227,7 +210,16 @@
         [...new Set(products.map(p => p[14]?.trim()).filter(v => v))].forEach(v => { document.getElementById('tagFilter').innerHTML += `<option value="${v}">${v}</option>`; });  
     }  
   
-    function updateL2() { const l1 = document.getElementById('l1Filter').value; const s = document.getElementById('l2Filter'); s.innerHTML = '<option value="">二级类目(全部)</option>'; [...new Set(products.filter(p => !l1 || p[5] === l1).map(p => p[6]))].forEach(v => { if(v) s.innerHTML += `<option value="${v}">${v}</option>`; }); }  
+    // 修正点：联动筛选逻辑，确保正确对应三级类目
+    function updateL2() { 
+        const l1 = document.getElementById('l1Filter').value; 
+        const s = document.getElementById('l2Filter'); 
+        s.innerHTML = '<option value="">三级类目(全部)</option>'; 
+        [...new Set(products.filter(p => !l1 || p[5] === l1).map(p => p[6]))].forEach(v => { 
+            if(v) s.innerHTML += `<option value="${v}">${v}</option>`; 
+        }); 
+    }  
+    
     let timer; const debouncedFilter = () => { clearTimeout(timer); timer = setTimeout(applyFilters, 300); };  
     window.onload = loadData;  
 </script>  
